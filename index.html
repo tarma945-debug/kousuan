@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>小学口算题生成器 · 人教版</title>
+<style>
+  :root{
+    --bg:#F5F6FB;
+    --panel:#FFFFFF;
+    --ink:#141A2E;
+    --ink2:#4A5270;
+    --ink3:#6E7691;
+    --ink4:#A3AAC4;
+    --line:#E7E9F3;
+    --line2:#EFF1F8;
+    --accent:#3D35F2;
+    --accent2:#5B54FF;
+    --soft:#EFEEFE;
+    --soft2:#F7F7FE;
+    --r:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 400px at 50% -180px, #E7E4FF 0%, rgba(231,228,255,0) 70%),
+      var(--bg);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{max-width:1320px;margin:0 auto;padding:44px 32px 26px}
+  .brand{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 8px;border-radius:100px;
+    background:#fff;border:1px solid var(--line);font-size:12px;color:var(--ink2);letter-spacing:.3px;
+    box-shadow:0 2px 8px rgba(20,26,46,.04)}
+  .brand svg{display:block}
+  .hero h1{margin:16px 0 8px;font-size:30px;line-height:1.25;letter-spacing:-.4px;font-weight:700}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{margin:0;font-size:14px;color:var(--ink3);line-height:1.7;max-width:640px}
+
+  /* ---------- layout ---------- */
+  .layout{max-width:1320px;margin:0 auto;padding:0 32px 72px;display:grid;grid-template-columns:404px minmax(0,1fr);gap:22px;align-items:start}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 2px rgba(20,26,46,.03),0 12px 32px -20px rgba(20,26,46,.15)}
+
+  /* ---------- config ---------- */
+  .config{position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;padding:6px 20px 20px}
+  .config::-webkit-scrollbar{width:8px}
+  .config::-webkit-scrollbar-thumb{background:#DCDFEC;border-radius:8px;border:2px solid #fff}
+  .config section{padding:18px 0}
+  .config section + section{border-top:1px dashed var(--line)}
+  .step{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;letter-spacing:.2px;margin-bottom:14px}
+  .step .num{width:20px;height:20px;border-radius:50%;background:var(--soft);color:var(--accent);
+    font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .step .hint{margin-left:auto;font-size:11.5px;font-weight:400;color:var(--ink4)}
+  .step .mini{margin-left:auto;display:flex;gap:4px}
+  .step .mini button{border:0;background:transparent;color:var(--accent);font-size:11.5px;
+    padding:2px 4px;border-radius:6px;cursor:pointer;font-family:inherit}
+  .step .mini button:hover{background:var(--soft)}
+
+  .grades{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .books{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .bookcard{appearance:none;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 11px;
+    text-align:left;cursor:pointer;font-family:inherit;transition:.16s;line-height:1.3}
+  .bookcard:hover{border-color:#C9C6F8}
+  .bookcard b{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:2px}
+  .bookcard i{display:block;font-size:10.5px;color:var(--ink4);font-style:normal;line-height:1.3}
+  .bookcard.on{background:var(--accent);border-color:var(--accent);box-shadow:0 8px 18px -10px rgba(61,53,242,.9)}
+  .bookcard.on b{color:#fff}
+  .bookcard.on i{color:rgba(255,255,255,.78)}
+  .grade{appearance:none;border:1px solid var(--line);background:#fff;border-radius:11px;
+    padding:11px 4px;font-size:13.5px;color:var(--ink2);cursor:pointer;font-family:inherit;
+    transition:.16s;line-height:1}
+  .grade:hover{border-color:#C9C6F8;color:var(--accent)}
+  .grade.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;
+    box-shadow:0 8px 18px -10px rgba(61,53,242,.9)}
+
+  .types{max-height:322px;overflow-y:auto;overflow-x:hidden;margin:0;padding:0}
+  .types::-webkit-scrollbar{width:7px}
+  .types::-webkit-scrollbar-thumb{background:#E2E4F0;border-radius:8px}
+  .tgroup{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink4);
+    letter-spacing:1.4px;margin:12px 0 6px}
+  .tgroup:first-child{margin-top:0}
+  .tgroup:after{content:"";flex:1;height:1px;background:var(--line2)}
+  .type{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;
+    padding:8px 9px;border-radius:10px;cursor:pointer;transition:.12s}
+  .type:hover{background:var(--soft2)}
+  .type.on{background:var(--soft)}
+  .type input{appearance:none;width:18px;height:18px;margin:0;border:1.5px solid #C6CCE2;border-radius:5px;
+    background:#fff;cursor:pointer;position:relative;transition:.15s;flex:0 0 auto}
+  .type input:checked{background:var(--accent);border-color:var(--accent)}
+  .type input:checked:after{content:"";position:absolute;left:5.5px;top:2.5px;width:4px;height:8px;
+    border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+  .type .tn{font-size:13px;color:var(--ink);line-height:1.35}
+  .type.on .tn{font-weight:600;color:#2A23C4}
+  .type .te{font-size:11px;color:var(--ink4);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{appearance:none;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 0;
+    min-width:52px;flex:1 0 auto;font-size:13px;color:var(--ink2);cursor:pointer;font-family:inherit;
+    font-variant-numeric:tabular-nums;transition:.14s}
+  .chip:hover{border-color:#C9C6F8;color:var(--accent)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .row{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .row label{font-size:12.5px;color:var(--ink3);white-space:nowrap}
+  .inp{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;
+    font-family:inherit;color:var(--ink);outline:none;transition:.14s;background:#fff}
+  .inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(61,53,242,.1)}
+  .switches{display:flex;flex-direction:column;gap:2px;margin-top:12px}
+  .switch{display:flex;align-items:center;justify-content:space-between;padding:7px 0;cursor:pointer}
+  .switch span{font-size:13px;color:var(--ink2)}
+  .switch input{appearance:none;width:38px;height:22px;border-radius:100px;background:#DDE0EC;position:relative;
+    cursor:pointer;transition:.2s;margin:0;flex:0 0 auto}
+  .switch input:after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+  .switch input:checked{background:var(--accent)}
+  .switch input:checked:after{left:18px}
+
+  .primary{width:100%;height:48px;border:0;border-radius:12px;color:#fff;font-size:15px;font-weight:600;
+    font-family:inherit;letter-spacing:.6px;cursor:pointer;background:linear-gradient(135deg,#4E45FF,#2D25C9);
+    box-shadow:0 10px 24px -12px rgba(61,53,242,.95);transition:.16s;margin-top:4px}
+  .primary:hover{transform:translateY(-1px);box-shadow:0 14px 26px -12px rgba(61,53,242,1)}
+  .primary:active{transform:translateY(0)}
+  .primary:disabled{background:#E2E4EF;color:#A6ACC4;box-shadow:none;cursor:not-allowed;transform:none}
+
+  /* ---------- output ---------- */
+  .output{padding:20px 22px 26px;min-height:520px}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:15px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .meta{font-size:12.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+  .meta b{color:var(--ink);font-weight:600;font-size:14px}
+  .btns{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap}
+  .btn{height:33px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:#fff;
+    font-size:12.5px;color:var(--ink2);font-family:inherit;cursor:pointer;transition:.14s;
+    display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn:hover{border-color:#C9C6F8;color:var(--accent);background:var(--soft2)}
+  .btn.acc{border-color:#CFCCFA;color:var(--accent);background:var(--soft)}
+  .btn.acc:hover{background:#E6E3FE}
+  .btn svg{width:13px;height:13px}
+
+  .sheetWrap{overflow:auto;margin:0 -6px;padding:6px}
+  .sheet{display:grid;grid-template-columns:repeat(var(--cols,4),minmax(0,1fr))}
+  .q{display:flex;align-items:center;gap:5px;padding:8px 9px;border-bottom:1px dashed var(--line2);
+    border-radius:7px;transition:.12s;min-height:44px;height:44px}
+  .q:hover{background:var(--soft2)}
+  .q .qn{font-size:10px;color:var(--ink4);font-variant-numeric:tabular-nums;flex:0 0 auto;
+    min-width:15px;align-self:center}
+  .q .qe{font-family:"STSong","华文宋体","Songti SC","SimSun",serif;
+    font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.1px;
+    white-space:nowrap;min-width:0;flex:1 1 auto}
+  /* 内容偏长的格子自动缩字号，保证题目完整可读、不会被截断 */
+  .q.long .qe{font-size:12px}
+  .q.xlong .qe{font-size:11px}
+  .q .qa{font-family:"STSong","华文宋体","Songti SC","SimSun",serif;
+    font-size:13px;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;
+    white-space:nowrap;flex:0 0 auto;align-self:center}
+  .q .qa.blank{color:#C9CEE3;font-weight:400}
+
+  /* ---------- 分数：上下叠写（教材写法），不用斜杠 ---------- */
+  /* 主字 13px 时，分子分母按 .76 缩放 ≈ 10px，仍看得清，分数线要留出视觉重量 */
+  .frac{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+    vertical-align:-0.38em;font-size:.76em;line-height:1;margin:0 .06em;font-weight:inherit}
+  .frac .num{padding:0 .1em .06em;border-bottom:1.5px solid currentColor}
+  .frac .den{padding:.06em .1em 0}
+  .mixed{display:inline-flex;align-items:center;gap:.08em;vertical-align:baseline}
+
+  /* ---------- 括号空：留出够写的宽度（不随字号一路缩，至少 34px） ---------- */
+  .hol{display:inline-block;position:relative;width:34px;height:1em;vertical-align:-0.14em;margin:0 .06em}
+  .hol:before,.hol:after{position:absolute;top:-.02em;line-height:1}
+  .hol:before{content:"(";left:0}
+  .hol:after{content:")";right:0}
+
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    min-height:430px;color:var(--ink4);text-align:center}
+  .empty .ico{width:74px;height:74px;border-radius:22px;background:linear-gradient(150deg,#F2F1FF,#EDEBFF);
+    display:flex;align-items:center;justify-content:center;color:#B7B2FB}
+  .empty h3{margin:0;font-size:14.5px;color:var(--ink2);font-weight:600}
+  .empty p{margin:0;font-size:12.5px;line-height:1.75;max-width:280px}
+
+  .foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--line2);font-size:11.5px;color:var(--ink4);line-height:1.7}
+
+  .toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);background:#1B2038;color:#fff;
+    font-size:13px;padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.24s;
+    z-index:99;box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:1080px){
+    .layout{grid-template-columns:1fr}
+    .config{position:static;max-height:none}
+    .hero{padding:32px 20px 20px}
+    .layout{padding:0 20px 56px}
+    .hero h1{font-size:24px}
+  }
+  /* 窄屏：列数由 JS 按屏宽收敛，避免每列过窄挤压算式 */
+  @media (max-width:760px){
+    .toolbar{gap:8px}
+    .btns{margin-left:0;width:100%}
+    .btn{flex:1;justify-content:center;padding:0 8px}
+  }
+  @media (max-width:560px){
+    .hero{padding:26px 16px 16px}
+    .layout{padding:0 16px 48px}
+    .output{padding:16px 14px 20px}
+    .config{padding:4px 16px 18px}
+    .q{padding:10px 5px}
+    .types{max-height:none}
+    .q .qn{font-size:10px;min-width:13px}
+    .foot{font-size:11px}
+  }
+
+  @media print{
+    body{background:#fff}
+    .hero,.config,.btns,.foot,.toast{display:none!important}
+    .layout{display:block;padding:0;max-width:none}
+    .panel{border:0;box-shadow:none;padding:0}
+    .toolbar{border-bottom:1.5px solid #333;padding-bottom:8px}
+    .meta{font-size:12px;color:#333}
+    .sheetWrap{overflow:visible}
+    .q{border-bottom:0;border:1px solid #D8D8D8;border-radius:0;margin:-0.5px;padding:8px 7px;
+      height:40px;min-height:40px;break-inside:avoid}
+    .q .qe,.q .qa{color:#000;font-size:13px}
+    .q .qn{color:#666}
+    /* 打印稿上的分数沿用同一比例，保证分子分母两行不撑开格子 */
+    .frac{font-size:.76em;line-height:1}
+    @page{margin:14mm}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="brand">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="4" fill="#3D35F2"/><path d="M4.5 6h7M4.5 9h4" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>
+    人教版 · 1—6 年级
+  </div>
+  <h1>小学<em>口算题</em>生成器</h1>
+  <p>按年级和题型勾选，设定题量，一键生成可直接复制成表格的口算练习。题型按人教版教材章节划分。</p>
+</header>
+
+<main class="layout">
+  <aside class="panel config">
+    <section>
+      <div class="step"><span class="num">0</span>教材版本<span class="hint" id="bookHint"></span></div>
+      <div class="books" id="books"></div>
+    </section>
+
+    <section>
+      <div class="step"><span class="num">1</span>选择年级</div>
+      <div class="grades" id="grades"></div>
+    </section>
+
+    <section>
+      <div class="step">
+        <span class="num">2</span>勾选题型
+        <span class="mini"><button id="selAll">全选</button><button id="selNone">清空</button></span>
+      </div>
+      <div class="types" id="types"></div>
+    </section>
+
+    <section>
+      <div class="step"><span class="num">3</span>题目设置<span class="hint" id="cntHint"></span></div>
+      <div class="chips" id="counts"></div>
+      <div class="row">
+        <label for="customCount">自定义</label>
+        <input class="inp" id="customCount" type="number" min="1" max="200" placeholder="1—200 道">
+      </div>
+      <div class="row" style="margin-top:14px">
+        <label>每行</label>
+        <div class="chips" id="cols" style="flex:1"></div>
+      </div>
+      <div class="switches">
+        <label class="switch"><span>显示答案</span><input type="checkbox" id="swAns"></label>
+        <label class="switch"><span>显示题号</span><input type="checkbox" id="swNo" checked></label>
+      </div>
+    </section>
+
+    <button class="primary" id="gen">生成口算题</button>
+  </aside>
+
+  <section class="panel output">
+    <div class="toolbar">
+      <div class="meta" id="meta">还没有生成题目</div>
+      <div class="btns">
+        <button class="btn acc" id="saveImg">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="5.4" cy="6" r="1.15" stroke="currentColor" stroke-width="1.1"/><path d="M2.4 11.4 5.9 8l2.1 2 2-1.7 3.4 3.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          保存为图片
+        </button>
+        <button class="btn" id="copyTable">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="5.5" y="5.5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 3.5H4a2 2 0 0 0-2 2v6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          复制表格
+        </button>
+        <button class="btn" id="copyLine">复制成行</button>
+        <button class="btn" id="copyAns">复制答案</button>
+        <button class="btn" id="printBtn">打印</button>
+      </div>
+    </div>
+    <div class="sheetWrap" id="sheetWrap">
+      <div id="sheetHost"></div>
+    </div>
+    <div class="foot" id="foot">提示：在 Excel / WPS 中用 Ctrl+V 粘贴「复制表格」的内容，会自动按列对齐；粘贴到 Word 后可用「文本转换成表格」。</div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   工具函数
+   ========================================================= */
+const R = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = a => a[R(0, a.length - 1)];
+const one = x => x.toFixed(1);
+const two = x => x.toFixed(2);
+const dec = x => String(Math.round(x * 1e6) / 1e6);
+
+function gcdInt(a, b){ a = Math.abs(a); b = Math.abs(b); while (b){ const t = a % b; a = b; b = t; } return a || 1; }
+function lcmInt(a, b){ return a / gcdInt(a, b) * b; }
+/* 与 d 互质的真分子候选，保证写出的分数是最简形式（教材规范，不出 4/8 这种） */
+function coprimes(d){ const r = []; for (let a = 1; a < d; a++) if (gcdInt(a, d) === 1) r.push(a); return r; }
+/* 在 <= max 范围内取一个与 d 互质的分子，取不到就退回普通随机 */
+function pickCo(d, max){
+  if (max < 1) return 1;
+  const c = coprimes(d).filter(x => x <= max);
+  return c.length ? pick(c) : R(1, max);
+}
+
+/* 分数：{n, d}，d > 0，已约分 */
+function F(n, d){
+  if (d === 0) return { n: 0, d: 1 };
+  if (d < 0){ n = -n; d = -d; }
+  const g = gcdInt(n, d);
+  return { n: n / g, d: d / g };
+}
+const fa = (x, y) => F(x.n * y.d + y.n * x.d, x.d * y.d);
+const fs = (x, y) => F(x.n * y.d - y.n * x.d, x.d * y.d);
+const fm = (x, y) => F(x.n * y.n, x.d * y.d);
+const fd = (x, y) => F(x.n * y.d, x.d * y.n);
+
+/* 把 a/d 约分后显示为最简分数，避免出现 4/8 这种没约分的写法 */
+function fr(a, d){ return fstr(F(a, d)); }
+
+/* 分数转显示字符串：真分数 a/b，假分数转带分数 "1 1/4" */
+function fstr(f){
+  if (f.d === 1) return String(f.n);
+  const neg = f.n < 0 ? '-' : '';
+  const an = Math.abs(f.n);
+  if (an > f.d){
+    const w = Math.floor(an / f.d);
+    const r = an - w * f.d;
+    return r ? `${neg}${w} ${r}/${f.d}` : `${neg}${w}`;
+  }
+  return `${neg}${an}/${f.d}`;
+}
+
+/* =========================================================
+   三年级「混合运算」专用取值范围
+   依据：三上教材对该单元的限制
+     · 乘法：仅表内乘法（口诀内）或多位数 × 一位数
+     · 除法：仅表内除法，且必须整除
+     · 加减：结果控制在 3000 以内，且不出负数
+   ========================================================= */
+
+/* 表内乘法的两个因数（各 2~9，上限 81） */
+function tMul(){ const a = R(2,9), b = R(2,9); return [a, b, a*b]; }
+/* 表内除法：先定商和除数，反推被除数，保证整除且都在乘法口诀内 */
+function tDiv(){ const d = R(2,9), q = R(2,9); return [d*q, d, q]; }
+/* 多位数 × 一位数（两位数 / 三位数都算多位数） */
+function tMulBig(){ return [R(11,99), R(2,9)]; }
+
+/* 表内乘除里的一个「乘除块」：返回 { text, val }，val 是它算完的值 */
+function blockMD(){
+  if (Math.random() < .5){
+    const [a, b, v] = tMul();
+    return { text: `${a} × ${b}`, val: v };
+  }
+  const [a, b, v] = tDiv();
+  return { text: `${a} ÷ ${b}`, val: v };
+}
+/* 一个加数：1~2999 内随机，留出余量给另一项，最终和不超过 3000 */
+function addend(max){
+  return R(1, Math.max(1, Math.min(2999, max)));
+}
+
+/* =========================================================
+   题型库
+   两套教材版本：
+   TYPES_NEW —— 人教版 2024 版（2022 课标，2024 秋起逐年替换）
+   TYPES_OLD —— 人教版 2012 审定版（老教材）
+   每项：g 年级 / t 上下册 / n 名称 / e 示例 / f 生成器
+   ========================================================= */
+
+/* =========================================================
+   ▍新版（2024）单元结构来源：教育部审定 2024 人教版目录
+   一上：5以内加减 / 6~10加减 / 认识立体图形 / 11~20的认识 / 20以内进位加法
+   一下：认识平面图形 / 20以内退位减法 / 100以内数的认识 / 100以内口算加减 / 笔算加减 / 数量间的加减关系
+   二上：分类与整理 / 1~6表内乘法 / 1~6表内除法 / 厘米和米 / 7~9表内乘除
+   二下：有余数除法 / 数量间的乘除关系 / 万以内数的认识 / 万以内加减
+   三上：观察物体 / 混合运算 / 毫米分米千米 / 多位数乘一位数 / 线和角 / 分数的初步认识
+   三下：生活中的运动现象 / 除数是一位数的除法 / 长方形和正方形 / 图形的面积 / 数据整理 / 小数的初步认识
+   四上：万以上数的认识 / 角的度量 / 多位数乘两位数 / 加法模型和乘法模型 / 平行四边形和梯形 / 条形统计图
+   四下：除数是两位数的除法 / 混合运算和运算律 / 三角形 / 小数的认识 / 小数加减法 / 平均数
+   五上：观察简单组合体 / 小数乘法 / 小数除法 / 图形的运动 / 用字母表示数和数量关系 / 多边形面积 / 可能性
+   五下：因数和倍数 / 分数的认识 / 分数加减法 / 长方体和正方体 / 折线统计图
+   六上：确定位置 / 分数乘法 / 分数除法 / 圆 / 百分数
+   六下：比和比例关系 / 扇形统计图 / 圆柱和圆锥 / 总复习
+   ========================================================= */
+const TYPES_NEW = [
+  /* ───────── 一年级上册 ───────── */
+  { g:1, t:'上', n:'5以内的加法', e:'3 + 2 = 5', f(){ const a = R(1,4), b = R(1,5-a); return [`${a} + ${b}`, a+b]; } },
+  { g:1, t:'上', n:'5以内的减法', e:'5 − 2 = 3', f(){ const a = R(2,5), b = R(1,a-1); return [`${a} − ${b}`, a-b]; } },
+  { g:1, t:'上', n:'6~10的加法', e:'6 + 3 = 9', f(){ const a = R(2,9), b = R(1,10-a); return [`${a} + ${b}`, a+b]; } },
+  { g:1, t:'上', n:'6~10的减法', e:'9 − 4 = 5', f(){ const a = R(2,10), b = R(1,a-1); return [`${a} − ${b}`, a-b]; } },
+  { g:1, t:'上', n:'10以内连加连减', e:'4 + 3 − 2 = 5', f(){ const a = R(1,5), b = R(1,10-a), c = R(1,a+b-1); return [`${a} + ${b} − ${c}`, a+b-c]; } },
+  { g:1, t:'上', n:'10以内加减混合', e:'7 − 2 + 4 = 9', f(){
+      const a = R(3,9), b = R(1,a-1), c = R(1,10-(a-b));
+      return [`${a} − ${b} + ${c}`, a-b+c]; } },
+  { g:1, t:'上', n:'20以内的进位加法', e:'9 + 6 = 15', f(){ const a = R(2,9), b = R(11-a,9); return [`${a} + ${b}`, a+b]; } },
+  { g:1, t:'上', n:'11~20的简单加减', e:'10 + 5 = 15', f(){
+      const v = R(1,3);
+      if (v === 1){ const a = R(1,9); return [`10 + ${a}`, 10+a]; }
+      if (v === 2){ const a = R(11,19); return [`${a} − 10`, a-10]; }
+      const a = R(11,19), u = a % 10;
+      return [`${a} − ${u}`, a-u]; } },
+
+  /* ───────── 一年级下册 ───────── */
+  { g:1, t:'下', n:'20以内的退位减法', e:'13 − 8 = 5', f(){ const m = R(11,18), s = R(m-9,9); return [`${m} − ${s}`, m-s]; } },
+  { g:1, t:'下', n:'整十数加减', e:'30 + 50 = 80', f(){
+      if (Math.random() < .5){ const a = R(1,8)*10, b = R(1,9-a/10)*10; return [`${a} + ${b}`, a+b]; }
+      const a = R(2,9)*10, b = R(1,a/10-1)*10; return [`${a} − ${b}`, a-b]; } },
+  { g:1, t:'下', n:'100以内加减法（不进位不退位）', e:'34 + 25 = 59', f(){
+      if (Math.random() < .5){
+        const t1 = R(1,7), u1 = R(0,8), t2 = R(1,9-t1), u2 = R(0,9-u1);
+        return [`${t1*10+u1} + ${t2*10+u2}`, t1*10+u1 + t2*10+u2];
+      }
+      const t1 = R(3,9), u1 = R(0,9), t2 = R(1,t1-1), u2 = R(0,u1);
+      return [`${t1*10+u1} − ${t2*10+u2}`, t1*10+u1 - (t2*10+u2)]; } },
+  { g:1, t:'下', n:'100以内进位加法', e:'28 + 45 = 73', f(){
+      const t1 = R(1,7), u1 = R(2,9), u2 = R(10-u1,9), t2 = R(1,9-t1);
+      return [`${t1*10+u1} + ${t2*10+u2}`, t1*10+u1 + t2*10+u2]; } },
+  { g:1, t:'下', n:'100以内退位减法', e:'52 − 27 = 25', f(){
+      const t1 = R(3,9), u1 = R(0,8), u2 = R(u1+1,9), t2 = R(1,t1-1);
+      return [`${t1*10+u1} − ${t2*10+u2}`, t1*10+u1 - (t2*10+u2)]; } },
+  { g:1, t:'下', n:'数量间的加减关系', e:'比 35 多 8 的数', f(){
+      const a = R(11,80), b = R(2,9);
+      if (Math.random() < .5) return [`比 ${a} 多 ${b} 的数`, a+b];
+      return [`比 ${a} 少 ${b} 的数`, a-b]; } },
+
+  /* ───────── 二年级上册 ───────── */
+  { g:2, t:'上', n:'1~6的表内乘法', e:'3 × 4 = 12', f(){ const a = R(2,6), b = R(2,6); return [`${a} × ${b}`, a*b]; } },
+  { g:2, t:'上', n:'1~6的表内除法', e:'12 ÷ 3 = 4', f(){ const b = R(2,6), q = R(2,6); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:2, t:'上', n:'7~9的表内乘法', e:'7 × 8 = 56', f(){ const a = pick([7,8,9]), b = R(2,9); return [`${a} × ${b}`, a*b]; } },
+  { g:2, t:'上', n:'7~9的表内除法', e:'56 ÷ 7 = 8', f(){ const b = pick([7,8,9]), q = R(2,9); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:2, t:'上', n:'乘法口诀填空', e:'7 × ( ) = 42', f(){ const a = R(2,9), b = R(2,9);
+      return Math.random() < .5 ? [`${a} × ( ) = ${a*b}`, b] : [`( ) × ${b} = ${a*b}`, a]; } },
+  { g:2, t:'上', n:'表内乘除混合', e:'6 × 4 ÷ 8 = 3', f(){
+      /* 保证乘积能被除数整除，二年级只出整数结果 */
+      const a = R(2,6), b = R(2,6);
+      const cands = [];
+      for (let d = 2; d <= 9; d++) if ((a*b) % d === 0) cands.push(d);
+      const d = pick(cands);
+      return [`${a} × ${b} ÷ ${d}`, (a*b)/d]; } },
+
+  /* ───────── 二年级下册 ───────── */
+  { g:2, t:'下', n:'有余数的除法', e:'17 ÷ 5 = 3……2', f(){ const d = R(2,9), q = R(2,9), r = R(1,d-1); return [`${d*q+r} ÷ ${d}`, `${q}……${r}`]; } },
+  { g:2, t:'下', n:'整百整千数加减', e:'2400 + 500 = 2900', f(){
+      if (Math.random() < .5){ const a = R(11,49)*100, b = R(1,9)*100; return [`${a} + ${b}`, a+b]; }
+      const a = R(21,89)*100, b = R(11,19)*100; return [`${a} − ${b}`, a-b]; } },
+  { g:2, t:'下', n:'万以内的加法', e:'3200 + 1500 = 4700', f(){
+      const a = R(11,49)*100, b = R(11,49)*100; return [`${a} + ${b}`, a+b]; } },
+  { g:2, t:'下', n:'万以内的减法', e:'4700 − 1500 = 3200', f(){
+      const a = R(51,99)*100, b = R(11,49)*100; return [`${a} − ${b}`, a-b]; } },
+  { g:2, t:'下', n:'数量间的乘除关系', e:'8 的 5 倍是多少', f(){
+      const a = R(2,9), b = R(2,9);
+      if (Math.random() < .5) return [`${a} 的 ${b} 倍是多少`, a*b];
+      return [`${a*b} 是 ${a} 的几倍`, b]; } },
+
+  /* ───────── 三年级上册 ───────── */
+  /* 三上「混合运算」单元按教材三小节拆开，覆盖两步混合运算的全部结构：
+     同级（只有加减 / 只有乘除）· 不同级（先乘除后加减）· 带小括号（先算括号里） */
+  { g:3, t:'上', n:'混合运算（同级）', e:'48 + 26 − 35 = 39', f(){
+      const v = R(1, 4);
+      if (v === 1){                                   /* A + B − C */
+        const a = addend(1500), b = addend(3000 - a), s = a + b;
+        const c = R(1, s - 1);
+        return [`${a} + ${b} − ${c}`, s - c];
+      }
+      if (v === 2){                                   /* A − B + C */
+        const a = R(2, 3000), b = R(1, a - 1), d = a - b;
+        const c = addend(3000 - d);
+        return [`${a} − ${b} + ${c}`, d + c];
+      }
+      if (v === 3){                                   /* A × B ÷ C */
+        /* 除数不能等于任一因数，否则整题退化成 3 × 4 ÷ 4 = 3，白送一题。
+           有的因数组合根本挑不出合格除数（如 8 × 5），这时重新抽因数。 */
+        let a = 0, b = 0, p = 0, c = 0;
+        for (let k = 0; k < 30; k++){
+          [a, b, p] = tMul();
+          const good = [];
+          for (let d = 2; d <= 9; d++) if (p % d === 0 && p / d <= 9 && d !== a && d !== b) good.push(d);
+          if (good.length){ c = pick(good); break; }
+        }
+        if (!c){ const [x, y, z] = tMul(); a = x; b = y; p = z; c = 2; }
+        return [`${a} × ${b} ÷ ${c}`, p / c];
+      }
+      const [a, b, q] = tDiv();                       /* A ÷ B × C */
+      /* 乘的数不能等于除数、商或被除数，否则乘除直接抵消（如 30 ÷ 5 × 5、6 ÷ 2 × 6） */
+      const cs = [];
+      for (let c = 2; c <= 9; c++) if (c !== b && c !== q && c !== a) cs.push(c);
+      const c = cs.length ? pick(cs) : 9;
+      return [`${a} ÷ ${b} × ${c}`, q * c]; } },
+
+  { g:3, t:'上', n:'混合运算（不同级）', e:'6 × 7 + 25 = 67', f(){
+      const v = R(1, 8);
+      let text, P;
+      if (v <= 4){ const [a, b, p] = tMul(); text = `${a} × ${b}`; P = p; }
+      else { const [a, b, q] = tDiv(); text = `${a} ÷ ${b}`; P = q; }
+      if (v === 1){ const a = addend(3000 - P); return [`${a} + ${text}`, a + P]; }
+      if (v === 2){ const a = addend(3000 - P); return [`${text} + ${a}`, P + a]; }
+      if (v === 3){ const a = R(P + 1, 3000);   return [`${a} − ${text}`, a - P]; }
+      if (v === 4){ const a = R(1, P - 1);      return [`${text} − ${a}`, P - a]; }
+      if (v === 5){ const a = addend(3000 - P); return [`${a} + ${text}`, a + P]; }
+      if (v === 6){ const a = addend(3000 - P); return [`${text} + ${a}`, P + a]; }
+      if (v === 7){ const a = R(P + 1, 3000);   return [`${a} − ${text}`, a - P]; }
+      const a = R(1, P - 1);                    return [`${text} − ${a}`, P - a]; } },
+
+  { g:3, t:'上', n:'混合运算（带小括号）', e:'(45 + 27) × 3 = 216', f(){
+      const v = R(1, 8);
+      if (v === 1 || v === 2){                        /* (A+B)×C  /  C×(A+B) */
+        const c = R(2, 9), cap = Math.floor(3000 / c);
+        const hi = Math.max(12, Math.floor(cap / 2));
+        const a = R(11, hi), b = R(11, Math.max(11, cap - a)), s = a + b;
+        return v === 1 ? [`(${a} + ${b}) × ${c}`, s * c]
+                       : [`${c} × (${a} + ${b})`, s * c];
+      }
+      if (v === 3 || v === 4){                        /* (A−B)×C  /  C×(A−B) */
+        const c = R(2, 9), cap = Math.floor(3000 / c);
+        /* 差和减数都取两位数，避免 (454 − 4) 这种减数是一位数的假括号题 */
+        const d = R(11, Math.max(11, cap)), b = R(11, 99), a = d + b;
+        return v === 3 ? [`(${a} − ${b}) × ${c}`, d * c]
+                       : [`${c} × (${a} − ${b})`, d * c];
+      }
+      if (v === 5 || v === 6){                        /* (A+B)÷C  /  (A−B)÷C，表内除法 */
+        const c = R(2, 9), q = R(2, 9), S = c * q;
+        if (v === 5){ const a = R(1, S - 1); return [`(${a} + ${S - a}) ÷ ${c}`, q]; }
+        /* 括号里的差取一个不像口算题的两位数以上，避免 (34 − 7) 这类一看就答的 */
+        const b = R(11, 49), a = S + b;
+        return [`(${a} − ${b}) ÷ ${c}`, q];
+      }
+      if (v === 7){                                   /* A+(B×C)：括号不改变顺序，用来对比理解 */
+        const [b, c, P] = tMul(), a = addend(3000 - P);
+        return [`${a} + (${b} × ${c})`, a + P];
+      }
+      /* A−(B+C)：去括号要变号，括号里两个加数都取两位数以上，避免假括号题 */
+      const b = R(11, 999), c = R(11, 999), s = b + c;
+      const a = R(s + 1, 3000);
+      return [`${a} − (${b} + ${c})`, a - s]; } },
+  { g:3, t:'上', n:'多位数乘一位数', e:'24 × 3 = 72', f(){
+      if (Math.random() < .6){ const a = R(12,99), b = R(2,9); return [`${a} × ${b}`, a*b]; }
+      const a = R(102,999), b = R(2,9); return [`${a} × ${b}`, a*b]; } },
+  { g:3, t:'上', n:'整十整百数乘一位数', e:'40 × 7 = 280', f(){ const a = R(2,9) * pick([10,10,100]), b = R(2,9); return [`${a} × ${b}`, a*b]; } },
+  { g:3, t:'上', n:'分数的初步认识', e:'1/5 + 2/5 = 3/5', f(){
+      const d = R(3,10);
+      if (Math.random() < .8){
+        const a = pickCo(d, d-2), b = pickCo(d, d-a-1);
+        return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      }
+      const a = pickCo(d, d-1), b = d - a;
+      return [`${a}/${d} + ${b}/${d}`, 1]; } },
+  { g:3, t:'上', n:'长度单位换算', e:'3米 = ( )厘米', f(){
+      const v = R(1,4);
+      if (v === 1){ const a = R(2,9); return [`${a}米 = ( )厘米`, a*100]; }
+      if (v === 2){ const a = R(2,9); return [`${a}分米 = ( )厘米`, a*10]; }
+      if (v === 3){ const a = R(2,9); return [`${a}千米 = ( )米`, a*1000]; }
+      const a = R(2,9); return [`${a*100}厘米 = ( )米`, a]; } },
+
+  /* ───────── 三年级下册 ───────── */
+  { g:3, t:'下', n:'除数是一位数的除法', e:'84 ÷ 4 = 21', f(){ const b = R(2,9), q = R(11,99); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:3, t:'下', n:'整十整百数除以一位数', e:'480 ÷ 6 = 80', f(){ const b = R(2,9), q = R(2,9)*10; return [`${b*q} ÷ ${b}`, q]; } },
+  { g:3, t:'下', n:'一位小数加减法', e:'2.5 + 1.3 = 3.8', f(){
+      if (Math.random() < .5){
+        const x = R(11,49), y = R(11,50-x);
+        return [`${one(x/10)} + ${one(y/10)}`, dec((x+y)/10)];
+      }
+      const x = R(21,89), y = R(11,x-1);
+      return [`${one(x/10)} − ${one(y/10)}`, dec((x-y)/10)]; } },
+  { g:3, t:'下', n:'长方形正方形的周长', e:'长8宽5的周长 = 26', f(){
+      if (Math.random() < .5){
+        const a = R(3,20); let b = R(2,20);
+        while (b === a) b = R(2,20);          /* 长宽相等就是正方形，不能叫长方形 */
+        return [`长 ${a} 宽 ${b} 的周长`, 2*(a+b)];
+      }
+      const a = R(2,20); return [`边长 ${a} 的正方形周长`, 4*a]; } },
+  { g:3, t:'下', n:'长方形正方形的面积', e:'长8宽5的面积 = 40', f(){
+      if (Math.random() < .5){
+        const a = R(3,20); let b = R(2,20);
+        while (b === a) b = R(2,20);
+        return [`长 ${a} 宽 ${b} 的面积`, a*b];
+      }
+      const a = R(2,20); return [`边长 ${a} 的正方形面积`, a*a]; } },
+
+  /* ───────── 四年级上册 ───────── */
+  { g:4, t:'上', n:'万以上数的加减', e:'3万 + 5万 = 8万', f(){
+      if (Math.random() < .5){
+        const a = R(2,8), b = R(2,9-a);
+        return [`${a}万 + ${b}万`, `${a+b}万`];
+      }
+      const a = R(3,9), b = R(2,a-1);
+      return [`${a}万 − ${b}万`, `${a-b}万`]; } },
+  { g:4, t:'上', n:'多位数乘两位数', e:'124 × 32 = 3968', f(){ const a = R(102,899), b = R(11,99); return [`${a} × ${b}`, a*b]; } },
+  { g:4, t:'上', n:'加法模型和乘法模型', e:'每盒 12 支，5 盒共多少支', f(){
+      if (Math.random() < .5){
+        const a = R(11,30), b = R(3,9);
+        return [`每盒 ${a} 支，${b} 盒共多少支`, a*b];
+      }
+      const a = R(21,90), b = R(11,40);
+      return [`${a} 与 ${b} 的和`, a+b]; } },
+  { g:4, t:'上', n:'积的变化规律', e:'12 × 30 = 360', f(){
+      const a = R(11,99), b = R(2,9) * 10;
+      return [`${a} × ${b}`, a*b]; } },
+
+  /* ───────── 四年级下册 ───────── */
+  { g:4, t:'下', n:'除数是两位数的除法', e:'672 ÷ 24 = 28', f(){ const b = R(11,49), q = R(2,20); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:4, t:'下', n:'混合运算和运算律', e:'25 × 4 × 7 = 700', f(){
+      const v = R(1,3);
+      if (v === 1){ const k = R(2,9); return [`25 × 4 × ${k}`, 100*k]; }
+      if (v === 2){ const k = R(2,9); return [`125 × 8 × ${k}`, 1000*k]; }
+      const a = R(2,9); return [`${a} × 99 + ${a}`, a*100]; } },
+  { g:4, t:'下', n:'小数的认识（小数点移动）', e:'0.35 × 100 = 35', f(){
+      if (Math.random() < .5){ const a = R(15,895)/100, k = pick([10,100,1000]); return [`${two(a)} × ${k}`, dec(a*k)]; }
+      const a = R(25,895)/10, k = pick([10,100]); return [`${one(a)} ÷ ${k}`, dec(a/k)]; } },
+  { g:4, t:'下', n:'小数加减法', e:'3.75 + 2.4 = 6.15', f(){
+      if (Math.random() < .5){
+        const a = R(105,895)/100, b = R(11,49)/10;
+        return [`${two(a)} + ${one(b)}`, dec(a+b)];
+      }
+      const a = R(300,895)/100, b = R(11,29)/10;
+      return [`${two(a)} − ${one(b)}`, dec(a-b)]; } },
+  { g:4, t:'下', n:'平均数', e:'3、5、7 的平均数 = 5', f(){
+      /* 三个数之和必须是 3 的倍数，保证平均数是整数 */
+      const base = R(2,9);
+      const d1 = R(0,4), d2 = R(0,4);
+      const need = (3 - (d1 + d2) % 3) % 3;
+      const a = base, b = base + d1, c = base + d2 + need;
+      return [`${a}、${b}、${c} 的平均数`, (a+b+c)/3]; } },
+
+  /* ───────── 五年级上册 ───────── */
+  { g:5, t:'上', n:'小数乘法', e:'1.5 × 0.8 = 1.2', f(){
+      if (Math.random() < .5){ const a = R(11,89)/10, b = R(2,9); return [`${one(a)} × ${b}`, dec(a*b)]; }
+      const a = R(11,89)/10, b = R(11,89)/10;
+      return [`${one(a)} × ${one(b)}`, dec(a*b)]; } },
+  { g:5, t:'上', n:'小数除法', e:'4.8 ÷ 1.2 = 4', f(){
+      if (Math.random() < .5){
+        const b = R(11,49)/10, q = R(2,9), a = b*q;
+        return [`${one(a)} ÷ ${one(b)}`, q];
+      }
+      const q = R(11,89)/10, d = R(2,5), a = q*d;
+      return [`${one(a)} ÷ ${d}`, one(q)]; } },
+  { g:5, t:'上', n:'用字母表示数', e:'3x + 2x = 5x', f(){
+      const v = R(1,3);
+      if (v === 1){ const k = R(2,9); return [`${k}x − x`, `${k-1}x`]; }
+      if (v === 2){ const k1 = R(1,5), k2 = R(1,5); return [`${k1}a + ${k2}a`, `${k1+k2}a`]; }
+      const k = R(2,9), m = R(2,4);
+      return [`${k}x × ${m}`, `${k*m}x`]; } },
+  { g:5, t:'上', n:'小数四则混合运算', e:'2.4 × 3 + 1.5 = 8.7', f(){
+      const a = R(11,49)/10, b = R(2,9), c = R(11,49)/10;
+      if (Math.random() < .5) return [`${one(a)} × ${b} + ${one(c)}`, dec(a*b+c)];
+      const b2 = R(2,5), k = R(2,4);
+      const sub = Math.round(b2*k*10)/10;
+      const a2 = Math.round((sub + R(5,60)/10) * 10)/10;
+      return [`${one(a2)} − ${one(b2)} × ${k}`, dec(a2-sub)]; } },
+
+  /* ───────── 五年级下册 ───────── */
+  { g:5, t:'下', n:'因数和倍数', e:'18 的因数有几个', f(){
+      const a = R(4,36);
+      let n = 0; for (let i = 1; i <= a; i++) if (a % i === 0) n++;
+      return [`${a} 的因数有几个`, n]; } },
+  { g:5, t:'下', n:'最大公因数和最小公倍数', e:'(12，18) = 6', f(){
+      const a = R(2,24), b = R(2,24);
+      if (Math.random() < .5) return [`(${a}，${b})`, gcdInt(a,b)];
+      return [`[${a}，${b}]`, lcmInt(a,b)]; } },
+  { g:5, t:'下', n:'约分', e:'12/18 = 2/3', f(){
+      const g = R(2,9); let a = R(1,9)*g, b = R(2,9)*g;
+      let guard = 0;
+      while (a === b && guard++ < 30) b = R(2,9)*g;
+      if (a === b) b = a + g;
+      if (a > b){ const t = a; a = b; b = t; }
+      return [`${a}/${b}`, fstr(F(a,b))]; } },
+  { g:5, t:'下', n:'分数与小数互化', e:'3/4 = 0.75', f(){
+      if (Math.random() < .5){
+        const d = pick([2,4,5,8,10,20,25]), a = pick(coprimes(d));
+        return [`${a}/${d}`, dec(a/d)];
+      }
+      const d = pick([2,4,5,8,10]), a = R(1,d-1);
+      return [`${dec(a/d)}`, fstr(F(a,d))]; } },
+  { g:5, t:'下', n:'同分母分数加减法', e:'3/7 + 2/7 = 5/7', f(){
+      const d = R(3,12), a = pickCo(d, d-1), b = pickCo(d, d-a);
+      if (Math.random() < .5) return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      const hi = Math.max(a,b), lo = Math.min(a,b);
+      if (hi === lo) return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      return [`${hi}/${d} − ${lo}/${d}`, fstr(F(hi-lo, d))]; } },
+  { g:5, t:'下', n:'异分母分数加减法', e:'1/2 + 1/3 = 5/6', f(){
+      const d1 = R(2,9); let d2 = R(2,9); let guard = 0;
+      while ((d2 === d1 || d1 % d2 === 0 || d2 % d1 === 0) && guard++ < 40) d2 = R(2,9);
+      if (d2 === d1) d2 = d1 + 1;
+      const a = pickCo(d1, d1-1), b = pickCo(d2, d2-1);
+      const x = F(a,d1), y = F(b,d2);
+      if (Math.random() < .5){
+        const s = fa(x,y);
+        if (s.n <= s.d) return [`${a}/${d1} + ${b}/${d2}`, fstr(s)];
+      }
+      const big = (x.n*y.d >= y.n*x.d) ? [x, `${a}/${d1}`, y, `${b}/${d2}`] : [y, `${b}/${d2}`, x, `${a}/${d1}`];
+      return [`${big[1]} − ${big[3]}`, fstr(fs(big[0], big[2]))]; } },
+
+  /* ───────── 六年级上册 ───────── */
+  { g:6, t:'上', n:'分数乘法', e:'3/4 × 2/3 = 1/2', f(){
+      const d1 = R(2,9), a = pick(coprimes(d1)), d2 = R(2,9), b = pick(coprimes(d2));
+      return [`${a}/${d1} × ${b}/${d2}`, fstr(fm(F(a,d1), F(b,d2)))]; } },
+  { g:6, t:'上', n:'分数除法', e:'1/2 ÷ 1/4 = 2', f(){
+      const d1 = R(2,9), a = pick(coprimes(d1)), d2 = R(2,9), b = pick(coprimes(d2));
+      return [`${a}/${d1} ÷ ${b}/${d2}`, fstr(fd(F(a,d1), F(b,d2)))]; } },
+  { g:6, t:'上', n:'分数混合运算', e:'2/3 × 6 + 1/2 = 4 1/2', f(){
+      const d1 = R(2,6), a = pick(coprimes(d1)), k = R(2,9), d2 = R(2,6), b = pick(coprimes(d2));
+      return [`${a}/${d1} × ${k} + ${b}/${d2}`, fstr(fa(fm(F(a,d1), F(k,1)), F(b,d2)))]; } },
+  { g:6, t:'上', n:'百分数计算', e:'60 × 25% = 15', f(){
+      const p = pick([10,20,25,40,50,60,75,80]), n = pick([20,40,50,60,80,100,200]);
+      return [`${n} × ${p}%`, dec(n*p/100)]; } },
+  { g:6, t:'上', n:'求比值与化简比', e:'3 : 6 = 1/2', f(){
+      /* 前项小于后项，比值是真分数；否则用整数比，避免出现带分数形式的比值 */
+      let a = R(1,9), b = R(1,9);
+      if (a === b) b = a + R(1,4) > 9 ? a - 1 : a + R(1,4);
+      if (a > b && a % b !== 0){ const t = a; a = b; b = t; }
+      if (a === b) a = 1, b = R(2,9);
+      return [`${a} : ${b}`, fstr(F(a,b))]; } },
+
+  /* ───────── 六年级下册 ───────── */
+  { g:6, t:'下', n:'解比例', e:'x : 3 = 20 : 12', f(){
+      const b = R(2,9), d = R(2,9), k = R(2,5);
+      const x = b*k, c = d*k;
+      return [`x : ${b} = ${c} : ${d}`, x]; } },
+  { g:6, t:'下', n:'百分数应用', e:'120 × 25% = 30', f(){
+      const p = pick([10,20,25,50]), base = pick([20,40,60,80,100,120,200]);
+      const part = base*p/100;
+      if (Math.random() < .5) return [`${base} × ${p}%`, dec(part)];
+      return [`${dec(part)} ÷ ${p}%`, base]; } },
+  { g:6, t:'下', n:'比和比例关系', e:'按 2 : 3 分配，第一份', f(){
+      /* 比写成最简整数比，总数能被总份数整除；题面尽量短，避免撑破格子 */
+      const a0 = R(1,4), b0 = R(1,4);
+      const g1 = gcdInt(a0, b0), a = a0/g1, b = b0/g1;
+      const total = (a+b) * R(2,9);
+      return [`${total} 按 ${a} : ${b} 分，第一份`, total*a/(a+b)]; } }
+];
+
+/* =========================================================
+   ▍旧版（2012 审定）—— 保留，供仍在使用老教材的地区选择
+   ========================================================= */
+const TYPES_OLD = [
+  /* ───────── 一年级上册 ───────── */
+  { g:1, t:'上', n:'10以内加法', e:'3 + 5 = 8', f(){ const a = R(1,9), b = R(1,10-a); return [`${a} + ${b}`, a+b]; } },
+  { g:1, t:'上', n:'10以内减法', e:'9 − 4 = 5', f(){ const a = R(2,10), b = R(1,a-1); return [`${a} − ${b}`, a-b]; } },
+  { g:1, t:'上', n:'10以内连加连减', e:'4 + 3 − 2 = 5', f(){ const a = R(1,5), b = R(1,10-a), c = R(1,a+b-1); return [`${a} + ${b} − ${c}`, a+b-c]; } },
+  { g:1, t:'上', n:'20以内进位加法', e:'9 + 6 = 15', f(){ const a = R(2,9), b = R(11-a,9); return [`${a} + ${b}`, a+b]; } },
+  { g:1, t:'上', n:'20以内退位减法', e:'13 − 8 = 5', f(){ const m = R(11,18), s = R(m-9,9); return [`${m} − ${s}`, m-s]; } },
+
+  /* ───────── 一年级下册 ───────── */
+  { g:1, t:'下', n:'20以内加减混合', e:'15 − 7 + 3 = 11', f(){ const a = R(11,18), b = R(a-9,9), c = R(1,20-(a-b)); return [`${a} − ${b} + ${c}`, a-b+c]; } },
+  { g:1, t:'下', n:'整十数加减', e:'30 + 50 = 80', f(){
+      if (Math.random() < .5){ const a = R(1,8)*10, b = R(1,9-a/10)*10; return [`${a} + ${b}`, a+b]; }
+      const a = R(2,9)*10, b = R(1,a/10-1)*10; return [`${a} − ${b}`, a-b];
+    } },
+  { g:1, t:'下', n:'100以内不进位加法', e:'34 + 5 = 39', f(){
+      if (Math.random() < .5){ const t = R(1,9), u = R(0,8), b = R(1,9-u); return [`${t*10+u} + ${b}`, t*10+u+b]; }
+      const t = R(1,8), u = R(0,9), b = R(1,9-t)*10; return [`${t*10+u} + ${b}`, t*10+u+b];
+    } },
+  { g:1, t:'下', n:'100以内不退位减法', e:'47 − 5 = 42', f(){ const t = R(1,9), u = R(1,9), b = R(1,u); return [`${t*10+u} − ${b}`, t*10+u-b]; } },
+  { g:1, t:'下', n:'100以内加减法（进位退位）', e:'28 + 45 = 73', f(){
+      if (Math.random() < .5){
+        const t1 = R(1,7), u1 = R(2,9), u2 = R(10-u1,9), t2 = R(1,9-t1);
+        return [`${t1*10+u1} + ${t2*10+u2}`, t1*10+u1 + t2*10+u2];
+      }
+      const t1 = R(3,9), u1 = R(0,8), u2 = R(u1+1,9), t2 = R(1,t1-1);
+      return [`${t1*10+u1} − ${t2*10+u2}`, t1*10+u1 - (t2*10+u2)];
+    } },
+
+  /* ───────── 二年级上册 ───────── */
+  { g:2, t:'上', n:'表内乘法', e:'7 × 8 = 56', f(){ const a = R(2,9), b = R(2,9); return [`${a} × ${b}`, a*b]; } },
+  { g:2, t:'上', n:'表内除法', e:'42 ÷ 6 = 7', f(){ const b = R(2,9), q = R(2,9); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:2, t:'上', n:'乘法口诀填空', e:'7 × ( ) = 42', f(){ const a = R(2,9), b = R(2,9);
+      return Math.random() < .5 ? [`${a} × ( ) = ${a*b}`, b] : [`( ) × ${b} = ${a*b}`, a]; } },
+  { g:2, t:'上', n:'两位数加两位数（进位）', e:'28 + 47 = 75', f(){
+      const t1 = R(1,8), u1 = R(2,9), u2 = R(10-u1,9), t2 = R(1,9-t1);
+      return [`${t1*10+u1} + ${t2*10+u2}`, t1*10+u1 + t2*10+u2]; } },
+  { g:2, t:'上', n:'两位数减两位数（退位）', e:'52 − 27 = 25', f(){
+      const t1 = R(3,9), u1 = R(0,8), u2 = R(u1+1,9), t2 = R(1,t1-1);
+      return [`${t1*10+u1} − ${t2*10+u2}`, t1*10+u1 - (t2*10+u2)]; } },
+  { g:2, t:'上', n:'连加连减（两步）', e:'56 − 18 + 9 = 47', f(){
+      if (Math.random() < .5){ const a = R(11,60), b = R(11,99-a), c = R(1,a+b-1); return [`${a} + ${b} − ${c}`, a+b-c]; }
+      const a = R(21,80), b = R(11,a-1), c = R(1,99-(a-b)); return [`${a} − ${b} + ${c}`, a-b+c]; } },
+
+  /* ───────── 二年级下册 ───────── */
+  { g:2, t:'下', n:'有余数的除法', e:'17 ÷ 5 = 3……2', f(){ const d = R(2,9), q = R(2,9), r = R(1,d-1); return [`${d*q+r} ÷ ${d}`, `${q}……${r}`]; } },
+  { g:2, t:'下', n:'整百整十数加减', e:'240 + 50 = 290', f(){
+      if (Math.random() < .5){
+        const a = R(11,49)*10, b = R(1,9)*10; return [`${a} + ${b}`, a+b];
+      }
+      const a = R(21,89)*10, b = R(11,19)*10; return [`${a} − ${b}`, a-b]; } },
+  { g:2, t:'下', n:'整千整百数加减', e:'3000 + 2000 = 5000', f(){
+      if (Math.random() < .5){ const a = R(1,4)*1000, b = R(1,4)*1000; return [`${a} + ${b}`, a+b]; }
+      const a = R(5,9)*1000, b = R(1,4)*1000; return [`${a} − ${b}`, a-b]; } },
+  { g:2, t:'下', n:'乘加乘减', e:'6 × 7 + 5 = 47', f(){
+      const a = R(2,9), b = R(2,9);
+      if (Math.random() < .5){ const c = R(1,9); return [`${a} × ${b} + ${c}`, a*b+c]; }
+      const c = R(1,a*b-1); return [`${a} × ${b} − ${c}`, a*b-c]; } },
+  { g:2, t:'下', n:'万以内数的加减', e:'3200 + 1500 = 4700', f(){
+      if (Math.random() < .5){ const a = R(11,49)*100, b = R(11,49)*100; return [`${a} + ${b}`, a+b]; }
+      const a = R(51,99)*100, b = R(11,49)*100; return [`${a} − ${b}`, a-b]; } },
+
+  /* ───────── 三年级上册 ───────── */
+  { g:3, t:'上', n:'多位数乘一位数', e:'24 × 3 = 72', f(){
+      if (Math.random() < .6){ const a = R(12,99), b = R(2,9); return [`${a} × ${b}`, a*b]; }
+      const a = R(102,999), b = R(2,9); return [`${a} × ${b}`, a*b]; } },
+  { g:3, t:'上', n:'整十整百数乘一位数', e:'40 × 7 = 280', f(){ const a = R(2,9) * pick([10,10,100]), b = R(2,9); return [`${a} × ${b}`, a*b]; } },
+  { g:3, t:'上', n:'除数是一位数的除法', e:'84 ÷ 4 = 21', f(){ const b = R(2,9), q = R(11,99); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:3, t:'上', n:'三位数加减法', e:'346 + 287 = 633', f(){
+      if (Math.random() < .5){ const a = R(102,699), b = R(102,280); return [`${a} + ${b}`, a+b]; }
+      const a = R(400,999), b = R(102,399); return [`${a} − ${b}`, a-b]; } },
+  { g:3, t:'上', n:'同分母分数加减（初步）', e:'1/5 + 2/5 = 3/5', f(){
+      const d = R(3,10);
+      /* 八成出「和小于 1」的题，两成出「和正好等于 1」，避免整组都凑成 1 */
+      if (Math.random() < .8){
+        const a = pickCo(d, d-2), b = pickCo(d, d-a-1);
+        return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      }
+      const a = pickCo(d, d-1), b = d - a;
+      return [`${a}/${d} + ${b}/${d}`, 1]; } },
+  { g:3, t:'上', n:'两步混合运算', e:'24 ÷ 4 + 17 = 23', f(){
+      if (Math.random() < .5){ const b = R(2,9), q = R(2,9), c = R(1,30); return [`${b*q} ÷ ${b} + ${c}`, q+c]; }
+      const a = R(2,9), b = R(2,9), c = R(1,30); return [`${a} × ${b} + ${c}`, a*b+c]; } },
+
+  /* ───────── 三年级下册 ───────── */
+  { g:3, t:'下', n:'两位数乘两位数', e:'23 × 14 = 322', f(){ const a = R(11,99), b = R(11,99); return [`${a} × ${b}`, a*b]; } },
+  { g:3, t:'下', n:'两位数乘整十数', e:'23 × 40 = 920', f(){ const a = R(11,99), b = R(2,9)*10; return [`${a} × ${b}`, a*b]; } },
+  { g:3, t:'下', n:'三位数除以一位数', e:'486 ÷ 6 = 81', f(){
+      const b = R(2,9), q = R(Math.ceil(100/b), Math.floor(999/b));
+      return [`${b*q} ÷ ${b}`, q]; } },
+  { g:3, t:'下', n:'一位小数加减法', e:'2.5 + 1.3 = 3.8', f(){
+      if (Math.random() < .5){
+        const x = R(11,49), y = R(11,50-x);
+        return [`${one(x/10)} + ${one(y/10)}`, dec((x+y)/10)];
+      }
+      const x = R(21,89), y = R(11,x-1);
+      return [`${one(x/10)} − ${one(y/10)}`, dec((x-y)/10)]; } },
+  { g:3, t:'下', n:'带括号混合运算', e:'(35 + 25) ÷ 6 = 10', f(){
+      const b = R(2,9), q = R(2,9), c = R(1,b*q-1), a = b*q - c;
+      return [`(${a} + ${c}) ÷ ${b}`, q]; } },
+  { g:3, t:'下', n:'简单分数加减', e:'5/8 − 2/8 = 3/8', f(){
+      const d = R(3,10), a = pickCo(d, d-1), b = pickCo(d, a-1);
+      if (a === b) return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      return [`${a}/${d} − ${b}/${d}`, fstr(F(a-b, d))]; } },
+
+  /* ───────── 四年级上册 ───────── */
+  { g:4, t:'上', n:'三位数乘两位数', e:'124 × 32 = 3968', f(){ const a = R(102,899), b = R(11,99); return [`${a} × ${b}`, a*b]; } },
+  { g:4, t:'上', n:'除数是两位数的除法', e:'672 ÷ 24 = 28', f(){ const b = R(11,49), q = R(2,20); return [`${b*q} ÷ ${b}`, q]; } },
+  { g:4, t:'上', n:'四则混合运算（整数）', e:'6 × 37 + 25 = 247', f(){
+      if (Math.random() < .5){ const a = R(2,9), b = R(11,99), c = R(11,99); return [`${a} × ${b} + ${c}`, a*b+c]; }
+      const d = R(2,9), q = R(11,20), b = R(11,99), s = d*q;
+      return [`${s} ÷ ${d} + ${b}`, q+b]; } },
+  { g:4, t:'上', n:'简便计算（凑整）', e:'25 × 4 × 7 = 700', f(){
+      const v = R(1,3);
+      if (v === 1){ const k = R(2,9); return [`25 × 4 × ${k}`, 100*k]; }
+      if (v === 2){ const k = R(2,9); return [`125 × 8 × ${k}`, 1000*k]; }
+      const a = R(2,9); return [`${a} × 99 + ${a}`, a*100]; } },
+  { g:4, t:'上', n:'万级数的加减', e:'12000 + 8000 = 20000', f(){
+      if (Math.random() < .5){ const a = R(11,49)*1000, b = R(11,49)*1000; return [`${a} + ${b}`, a+b]; }
+      const a = R(51,99)*1000, b = R(11,49)*1000; return [`${a} − ${b}`, a-b]; } },
+
+  /* ───────── 四年级下册 ───────── */
+  { g:4, t:'下', n:'小数加减法', e:'3.75 + 2.4 = 6.15', f(){
+      if (Math.random() < .5){
+        const a = R(105,895)/100, b = R(11,49)/10;
+        return [`${two(a)} + ${one(b)}`, dec(a+b)];
+      }
+      const a = R(300,895)/100, b = R(11,29)/10;
+      return [`${two(a)} − ${one(b)}`, dec(a-b)]; } },
+  { g:4, t:'下', n:'小数加减混合运算', e:'8.6 − 2.4 + 1.7 = 7.9', f(){
+      if (Math.random() < .5){
+        /* a − b + c：保证 a 大于 b，且结果不为 0 */
+        const b = R(11,29)/10, c = R(11,19)/10;
+        const a = Math.round((b + R(5,45)/10) * 10)/10;
+        return [`${one(a)} − ${one(b)} + ${one(c)}`, dec(a-b+c)];
+      }
+      /* a + b − c：保证和大于 c */
+      const a = R(11,39)/10, b = R(11,39)/10;
+      const c = Math.round(R(11, Math.max(12, Math.round((a+b)*10)-2))/10)/10;
+      return [`${one(a)} + ${one(b)} − ${one(c)}`, dec(a+b-c)]; } },
+  { g:4, t:'下', n:'小数简算', e:'3.7 + 4.6 + 6.3 = 14.6', f(){
+      const v = R(1,2);
+      if (v === 1){
+        const a = R(15,45)/10, c = Math.round((10-a)*10)/10, b = R(11,39)/10;
+        return [`${one(a)} + ${one(b)} + ${one(c)}`, dec(a+b+c)];
+      }
+      const k = R(2,9); return [`0.25 × 4 × ${k}`, dec(0.25*4*k)]; } },
+  { g:4, t:'下', n:'整数四则混合运算', e:'(48 + 32) ÷ 8 = 10', f(){
+      const b = R(2,9), q = R(2,9), c = R(1,b*q-1), a = b*q - c;
+      if (Math.random() < .5) return [`(${a} + ${c}) ÷ ${b}`, q];
+      const a2 = R(2,9), b2 = R(11,20), c2 = R(11,99);
+      return [`${a2} × ${b2} + ${c2}`, a2*b2+c2]; } },
+
+  /* ───────── 五年级上册 ───────── */
+  { g:5, t:'上', n:'小数乘法', e:'1.5 × 0.8 = 1.2', f(){
+      if (Math.random() < .5){ const a = R(11,89)/10, b = R(2,9); return [`${one(a)} × ${b}`, dec(a*b)]; }
+      const a = R(11,89)/10, b = R(11,89)/10;
+      return [`${one(a)} × ${one(b)}`, dec(a*b)]; } },
+  { g:5, t:'上', n:'小数除法', e:'4.8 ÷ 1.2 = 4', f(){
+      if (Math.random() < .5){
+        const b = R(11,49)/10, q = R(2,9), a = b*q;
+        return [`${one(a)} ÷ ${one(b)}`, q];
+      }
+      const q = R(11,89)/10, d = R(2,5), a = q*d;
+      return [`${one(a)} ÷ ${d}`, one(q)]; } },
+  { g:5, t:'上', n:'小数四则混合运算', e:'2.4 × 3 + 1.5 = 8.7', f(){
+      const a = R(11,49)/10, b = R(2,9), c = R(11,49)/10;
+      if (Math.random() < .5) return [`${one(a)} × ${b} + ${one(c)}`, dec(a*b+c)];
+      /* 减法在前时，保证被减数大于减法的乘积，避免出现负数（小学阶段不出负数结果） */
+      const b2 = R(2,5), k = R(2,4);
+      const sub = Math.round(b2*k*10)/10;
+      const a2 = Math.round((sub + R(5,60)/10) * 10)/10;
+      return [`${one(a2)} − ${one(b2)} × ${k}`, dec(a2-sub)]; } },
+  { g:5, t:'上', n:'解方程（口算）', e:'x + 3.5 = 7.5', f(){
+      if (Math.random() < .5){
+        const x = R(2,9), a = R(11,89)/10;
+        return [`x + ${one(a)} = ${dec(x+a)}`, x];
+      }
+      const k = R(2,6), x = R(11,49)/10;
+      return [`${k}x = ${dec(k*x)}`, one(x)]; } },
+
+  /* ───────── 五年级下册 ───────── */
+  { g:5, t:'下', n:'同分母分数加减法', e:'3/7 + 2/7 = 5/7', f(){
+      const d = R(3,12), a = pickCo(d, d-1), b = pickCo(d, d-a);
+      if (Math.random() < .5) return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      const hi = Math.max(a,b), lo = Math.min(a,b);
+      if (hi === lo) return [`${a}/${d} + ${b}/${d}`, fstr(F(a+b, d))];
+      return [`${hi}/${d} − ${lo}/${d}`, fstr(F(hi-lo, d))]; } },
+  { g:5, t:'下', n:'异分母分数加减法', e:'1/2 + 1/3 = 5/6', f(){
+      const d1 = R(2,9); let d2 = R(2,9); let guard = 0;
+      while ((d2 === d1 || d1 % d2 === 0 || d2 % d1 === 0) && guard++ < 40) d2 = R(2,9);
+      if (d2 === d1) d2 = d1 + 1;
+      const a = pickCo(d1, d1-1), b = pickCo(d2, d2-1);
+      const x = F(a,d1), y = F(b,d2);
+      if (Math.random() < .5){
+        const s = fa(x,y);
+        if (s.n <= s.d) return [`${a}/${d1} + ${b}/${d2}`, fstr(s)];
+      }
+      const big = (x.n*y.d >= y.n*x.d) ? [x, `${a}/${d1}`, y, `${b}/${d2}`] : [y, `${b}/${d2}`, x, `${a}/${d1}`];
+      return [`${big[1]} − ${big[3]}`, fstr(fs(big[0], big[2]))]; } },
+  { g:5, t:'下', n:'约分', e:'12/18 = 2/3', f(){
+      /* 这题刻意给未约分的分数，让学生练约分，所以分子分母共享公因数是对的 */
+      const g = R(2,9); let a = R(1,9)*g, b = R(2,9)*g;
+      let guard = 0;
+      while (a === b && guard++ < 30) b = R(2,9)*g;
+      if (a === b) b = a + g;
+      if (a > b){ const t = a; a = b; b = t; }
+      return [`${a}/${b}`, fstr(F(a,b))]; } },
+  { g:5, t:'下', n:'最大公因数与最小公倍数', e:'(12，18) = 6', f(){
+      const a = R(2,24), b = R(2,24);
+      /* 教材符号：(a，b) 表示最大公因数，[a，b] 表示最小公倍数 */
+      if (Math.random() < .5) return [`(${a}，${b})`, gcdInt(a,b)];
+      return [`[${a}，${b}]`, lcmInt(a,b)]; } },
+  { g:5, t:'下', n:'分数与小数互化', e:'3/4 = 0.75', f(){
+      if (Math.random() < .5){
+        const d = pick([2,4,5,8,10,20,25]), a = pick(coprimes(d));
+        return [`${a}/${d}`, dec(a/d)];
+      }
+      const d = pick([2,4,5,8,10]), a = R(1,d-1);
+      return [`${dec(a/d)}`, fstr(F(a,d))]; } },
+
+  /* ───────── 六年级上册 ───────── */
+  { g:6, t:'上', n:'分数乘法', e:'3/4 × 2/3 = 1/2', f(){
+      const d1 = R(2,9), a = pick(coprimes(d1)), d2 = R(2,9), b = pick(coprimes(d2));
+      return [`${a}/${d1} × ${b}/${d2}`, fstr(fm(F(a,d1), F(b,d2)))]; } },
+  { g:6, t:'上', n:'分数除法', e:'1/2 ÷ 1/4 = 2', f(){
+      const d1 = R(2,9), a = pick(coprimes(d1)), d2 = R(2,9), b = pick(coprimes(d2));
+      return [`${a}/${d1} ÷ ${b}/${d2}`, fstr(fd(F(a,d1), F(b,d2)))]; } },
+  { g:6, t:'上', n:'分数混合运算', e:'2/3 × 6 + 1/2 = 4 1/2', f(){
+      const d1 = R(2,6), a = pick(coprimes(d1)), k = R(2,9), d2 = R(2,6), b = pick(coprimes(d2));
+      return [`${a}/${d1} × ${k} + ${b}/${d2}`, fstr(fa(fm(F(a,d1), F(k,1)), F(b,d2)))]; } },
+  { g:6, t:'上', n:'百分数计算', e:'60 × 25% = 15', f(){
+      const p = pick([10,20,25,40,50,60,75,80]), n = pick([20,40,50,60,80,100,200]);
+      return [`${n} × ${p}%`, dec(n*p/100)]; } },
+  { g:6, t:'上', n:'求比值', e:'3 : 4', f(){
+      const a = R(1,9), b = R(1,9);
+      return [`${a} : ${b}`, fstr(F(a,b))]; } },
+
+  /* ───────── 六年级下册 ───────── */
+  { g:6, t:'下', n:'百分数应用', e:'120 × 25% = 30', f(){
+      const p = pick([10,20,25,50]), base = pick([20,40,60,80,100,120,200]);
+      const part = base*p/100;
+      if (Math.random() < .5) return [`${base} × ${p}%`, dec(part)];
+      return [`${dec(part)} ÷ ${p}%`, base]; } },
+  { g:6, t:'下', n:'解比例', e:'x : 3 = 20 : 12', f(){
+      const b = R(2,9), d = R(2,9), k = R(2,5);
+      const x = b*k, c = d*k;
+      return [`x : ${b} = ${c} : ${d}`, x]; } },
+  { g:6, t:'下', n:'分数、小数、百分数互化', e:'3/4 = ( )%', f(){
+      const v = R(1,3);
+      if (v === 1){ const d = pick([2,4,5,8,10,20,25]), a = pick(coprimes(d)); return [`${a}/${d} = ( )%`, dec(a/d*100) + '%']; }
+      if (v === 2){ const p = pick([25,50,75,20,40,60,80,10]); return [`${dec(p/100)} = ( )%`, p + '%']; }
+      const p = pick([25,50,75,20,40,60,80]);
+      return [`${p}% = ( )`, fstr(F(p,100))]; } }
+];
+
+/* =========================================================
+   教材版本切换
+   ========================================================= */
+const BOOKS = {
+  new: { name:'新版 2024', desc:'2022 课标 · 2024 秋起使用', list: TYPES_NEW },
+  old: { name:'旧版 2012', desc:'2012 审定版 · 老教材', list: TYPES_OLD }
+};
+function TYPES_ON(){ return BOOKS[state.book].list; }
+/* 兼容：所有旧逻辑读 TYPES 时拿到当前版本题库 */
+const TYPES = new Proxy([], {
+  get(t, prop){
+    const list = TYPES_ON();
+    const v = list[prop];
+    return typeof v === 'function' ? v.bind(list) : v;
+  },
+  has(t, prop){ return prop in TYPES_ON(); },
+  ownKeys(){ return Reflect.ownKeys(TYPES_ON()); },
+  getOwnPropertyDescriptor(t, prop){
+    return Object.getOwnPropertyDescriptor(TYPES_ON(), prop);
+  }
+});
+
+/* =========================================================
+   状态
+   ========================================================= */
+const STORE_KEY = 'kousuan-v2';
+const state = {
+  book: 'new',
+  grade: 1,
+  selected: new Set(),
+  count: 20,
+  cols: 4,
+  showAns: false,
+  useNo: true,
+  questions: []
+};
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+function save(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      book: state.book,
+      grade: state.grade,
+      selected: Array.from(state.selected),
+      count: state.count,
+      cols: state.cols,
+      showAns: state.showAns,
+      useNo: state.useNo
+    }));
+  }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (d.book === 'old' || d.book === 'new') state.book = d.book;
+    if (typeof d.grade === 'number' && d.grade >= 1 && d.grade <= 6) state.grade = d.grade;
+    if (Array.isArray(d.selected)) state.selected = new Set(d.selected);
+    if (typeof d.count === 'number') state.count = d.count;
+    if (typeof d.cols === 'number') state.cols = d.cols;
+    if (typeof d.showAns === 'boolean') state.showAns = d.showAns;
+    if (typeof d.useNo === 'boolean') state.useNo = d.useNo;
+    return true;
+  }catch(e){ return false; }
+}
+
+/* =========================================================
+   渲染：教材版本
+   ========================================================= */
+function renderBooks(){
+  const host = $('#books');
+  host.innerHTML = '';
+  ['new','old'].forEach(key => {
+    const b = BOOKS[key];
+    const btn = document.createElement('button');
+    btn.className = 'bookcard' + (state.book === key ? ' on' : '');
+    btn.innerHTML = `<b>${b.name}</b><i>${b.desc}</i>`;
+    btn.onclick = () => {
+      if (state.book === key) return;
+      state.book = key;
+      state.selected.clear();
+      autoSelect();
+      renderBooks(); renderTypes(); updateCountHint(); save();
+      if (state.questions.length){
+        state.questions = [];
+        renderSheet();
+        toast('已切换教材版本，请重新生成题目');
+      }
+    };
+    host.appendChild(btn);
+  });
+  const h = $('#bookHint');
+  if (h) h.textContent = state.book === 'new' ? '2024 秋起逐年级替换中' : '部分地区仍在使用';
+}
+
+/* =========================================================
+   渲染：年级
+   ========================================================= */
+const GRADE_NAMES = ['一','二','三','四','五','六'];
+function renderGrades(){
+  const host = $('#grades');
+  host.innerHTML = '';
+  GRADE_NAMES.forEach((name, i) => {
+    const b = document.createElement('button');
+    b.className = 'grade' + (state.grade === i+1 ? ' on' : '');
+    b.textContent = name + '年级';
+    b.onclick = () => {
+      if (state.grade === i+1) return;
+      state.grade = i+1;
+      state.selected.clear();
+      autoSelect();
+      renderGrades(); renderTypes(); updateCountHint(); save();
+    };
+    host.appendChild(b);
+  });
+}
+
+/* =========================================================
+   渲染：题型
+   ========================================================= */
+function gradeTypes(){ return TYPES.filter(t => t.g === state.grade); }
+
+function autoSelect(){
+  const list = gradeTypes();
+  state.selected.clear();
+  list.slice(0, 2).forEach(t => state.selected.add(t.n));
+}
+
+function renderTypes(){
+  const host = $('#types');
+  host.innerHTML = '';
+  const list = gradeTypes();
+  ['上','下'].forEach(term => {
+    const group = list.filter(t => t.t === term);
+    if (!group.length) return;
+    const gh = document.createElement('div');
+    gh.className = 'tgroup';
+    gh.textContent = GRADE_NAMES[state.grade-1] + '年级 · ' + term + '册';
+    host.appendChild(gh);
+
+    group.forEach(t => {
+      const lab = document.createElement('label');
+      lab.className = 'type' + (state.selected.has(t.n) ? ' on' : '');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = state.selected.has(t.n);
+      cb.onchange = () => {
+        if (cb.checked) state.selected.add(t.n); else state.selected.delete(t.n);
+        lab.classList.toggle('on', cb.checked);
+        updateCountHint(); save();
+      };
+      const nm = document.createElement('span');
+      nm.className = 'tn'; nm.textContent = t.n;
+      const ex = document.createElement('span');
+      ex.className = 'te'; ex.textContent = t.e;
+      lab.append(cb, nm, ex);
+      host.appendChild(lab);
+    });
+  });
+  updateCountHint();
+}
+
+function updateCountHint(){
+  const n = state.selected.size;
+  $('#gen').disabled = n === 0;
+  const hint = $('#cntHint');
+  if (hint) hint.textContent = n ? `已选 ${n} 个题型` : '还没有选题型';
+}
+
+/* =========================================================
+   渲染：题量 / 列数 / 开关
+   ========================================================= */
+const COUNTS = [10, 20, 30, 40, 50, 100];
+function renderCounts(){
+  const host = $('#counts');
+  host.innerHTML = '';
+  COUNTS.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (state.count === c ? ' on' : '');
+    b.textContent = c;
+    b.onclick = () => {
+      state.count = c;
+      $('#customCount').value = '';
+      renderCounts(); save(); updateCntLabel();
+    };
+    host.appendChild(b);
+  });
+}
+function renderCols(){
+  const host = $('#cols');
+  host.innerHTML = '';
+  [2,3,4,5].forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (state.cols === c ? ' on' : '');
+    b.textContent = c + ' 列';
+    b.onclick = () => {
+      state.cols = c;
+      renderCols(); save();
+      if (state.questions.length) renderSheet();
+    };
+    host.appendChild(b);
+  });
+}
+function updateCntLabel(){
+  const el = $('#cntHint');
+  if (el && state.selected.size) el.textContent = `已选 ${state.selected.size} 个题型`;
+}
+
+/* =========================================================
+   生成
+   ========================================================= */
+function buildQuestions(total){
+  const pool = TYPES.filter(t => t.g === state.grade && state.selected.has(t.n));
+  if (!pool.length) return { list: [], deduped: 0 };
+
+  /* 第一轮：优先取不重复的式子。同一个题型反复抽取直到抽不出新题 */
+  let out = [];
+  const seen = new Set();
+  let i = 0, idle = 0, guard = 0;
+  const MAX_GUARD = total * 80 + 2000;
+
+  while (out.length < total && guard++ < MAX_GUARD){
+    const t = pool[i % pool.length];
+    i++;
+    let item = null;
+    for (let k = 0; k < 40; k++){
+      const res = t.f();
+      if (!res || res.length < 2) continue;
+      const expr = String(res[0]).trim();
+      const ans = String(res[1]).trim();
+      const key = expr + '|' + ans;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      item = { expr, ans };
+      break;
+    }
+    if (item){ out.push(item); idle = 0; }
+    else if (++idle > pool.length * 6) break;   /* 连续多轮都抽不出新题 → 空间已用尽 */
+  }
+
+  const deduped = out.length;
+
+  /* 第二轮：低年级小范围题型（如 10以内加法仅 45 种）题量要求超出唯一解上限时，
+     用已有题目循环补齐，保证拿到的题数就是用户要的题数 */
+  if (out.length < total && out.length > 0){
+    const base = out.slice();
+    let p = 0;
+    while (out.length < total){
+      out.push(base[p % base.length]);
+      p++;
+      if (p > base.length * 20) break;
+    }
+  }
+
+  /* 打乱，避免同题型连续成段 */
+  for (let j = out.length - 1; j > 0; j--){
+    const r = Math.floor(Math.random() * (j + 1));
+    const tmp = out[j]; out[j] = out[r]; out[r] = tmp;
+  }
+
+  /* 去重后如果有紧邻重复，做一次局部交换把它错开 */
+  if (out.length > 6){
+    for (let j = 1; j < out.length; j++){
+      if (out[j].expr === out[j-1].expr){
+        const k = (j + 2 + Math.floor(Math.random() * (out.length - 3))) % out.length;
+        if (out[k].expr !== out[j-1].expr && out[k].expr !== out[(j+1) % out.length].expr){
+          const tmp = out[j]; out[j] = out[k]; out[k] = tmp;
+        }
+      }
+    }
+  }
+
+  return { list: out, deduped: Math.min(deduped, out.length) };
+}
+
+/* =========================================================
+   渲染：题目表
+   ========================================================= */
+function cellHTML(q, idx){
+  const eq = q.expr.includes('=') ? q.expr : q.expr + ' =';
+  let html = '';
+  if (state.useNo) html += `<span class="qn">${idx+1}.</span>`;
+  html += `<span class="qe">${pretty(eq)}</span>`;
+  if (state.showAns) html += `<span class="qa">${pretty(q.ans)}</span>`;
+  return html;
+}
+/* =========================================================
+   题面渲染：把 "5/9" 变成上下叠写的分数，
+   把 "( )" 变成留出书写空格的双括号
+   ========================================================= */
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* 把纯文本算式转成用于显示的 HTML（只用于屏幕，复制时仍走纯文本） */
+function pretty(raw){
+  let s = esc(raw);
+
+  /* 1) 括号空：支持 ( )、（ ）、(   ) 各种写法 */
+  s = s.replace(/[(（]\s*[)）]/g, '<span class="hol"></span>');
+
+  /* 2) 带分数：如 "1 1/2"、"2 3/4" → 整数 + 分数 */
+  s = s.replace(/(?<![\d.])(\d+)\s+(\d+)\/(\d+)(?![\d])/g, (m, w, n, d) =>
+    `<span class="mixed"><span>${w}</span>${fracHTML(n, d)}</span>`);
+
+  /* 3) 普通分数：如 "5/9"、"12/18" → 上下叠写 */
+  s = s.replace(/(?<![\d.])(\d+)\/(\d+)(?![\d])/g, (m, n, d) => fracHTML(n, d));
+
+  return s;
+}
+
+function fracHTML(n, d){
+  return `<span class="frac"><span class="num">${n}</span><span class="den">${d}</span></span>`;
+}
+
+function renderSheet(){
+  const host = $('#sheetHost');
+  const qs = state.questions;
+  if (!qs.length){
+    host.innerHTML = `
+      <div class="empty">
+        <div class="ico">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M3 9h18M9 9v11M15 9v11" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <h3>先在左侧勾选题型</h3>
+        <p>选好年级和题型、定好题量后，点「生成口算题」。<br>生成的题目可以一键复制成表格贴到 Excel 或 Word。</p>
+      </div>`;
+    $('#meta').textContent = '还没有生成题目';
+    return;
+  }
+
+  /* 窄屏自动收列：保证每列至少约 100px，算式不被挤压 */
+  const cols = effCols();
+  let html = `<div class="sheet" style="--cols:${cols}">`;
+  qs.forEach((q, i) => { html += `<div class="q">${cellHTML(q, i)}</div>`; });
+  html += '</div>';
+  host.innerHTML = html;
+
+  /* 逐格测量：内容超宽就降一档字号，保证题目完整显示不被截断 */
+  fitCells();
+
+  const uniq = new Set(qs.map(q => q.expr + '|' + q.ans)).size;
+  let txt = `共 <b>${qs.length}</b> 题 · 已选 ${state.selected.size} 个题型 · ${cols} 列`;
+  if (cols < state.cols) txt += `（窄屏已自动收列）`;
+  if (uniq < qs.length) txt += ` · 不重复式子 ${uniq} 种`;
+  $('#meta').innerHTML = txt;
+}
+
+/* 内容放不下时依次降字号：13px → 12px → 11px
+   注意：必须逐个测格子内部元素。.qe 是 flex:1 1 auto + min-width:0，它自己会收缩，
+   而 .q 的 scrollWidth 不会跟着变大，所以测 .q 是测不出溢出的（曾经踩过这个坑）。 */
+function fitCells(){
+  document.querySelectorAll('.q').forEach(q => {
+    q.classList.remove('long','xlong');
+    const fits = () => {
+      const box = q.getBoundingClientRect();
+      for (const el of q.children){
+        if (el.scrollWidth > el.clientWidth + 1) return false;
+        if (el.getBoundingClientRect().right > box.right + 1) return false;
+      }
+      return true;
+    };
+    if (fits()) return;
+    q.classList.add('long');
+    if (fits()) return;
+    q.classList.add('xlong');
+  });
+}
+
+/* 实际渲染列数：屏宽不足时向下收敛 */
+function effCols(){
+  const w = Math.max(window.innerWidth || 1440, 320);
+  if (w < 460) return Math.min(state.cols, 2);
+  if (w < 760) return Math.min(state.cols, 3);
+  return state.cols;
+}
+
+/* =========================================================
+   复制
+   ========================================================= */
+async function copyText(text, tip){
+  if (!text) { toast('还没有题目可以复制'); return; }
+  try{
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    } else { throw new Error('no api'); }
+  }catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(err){}
+    ta.remove();
+  }
+  toast(tip || '已复制到剪贴板');
+}
+
+let toastTimer = null;
+function toast(msg){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1700);
+}
+
+function qText(q, idx){
+  const eq = q.expr.includes('=') ? q.expr : q.expr + ' =';
+  return (state.useNo ? `${idx+1}. ` : '') + eq + (state.showAns ? ' ' + q.ans : '');
+}
+
+function buildTSV(withAnswer){
+  const qs = state.questions;
+  const cols = effCols();
+  const rows = [];
+  for (let i = 0; i < qs.length; i += cols){
+    const slice = qs.slice(i, i + cols);
+    rows.push(slice.map((q, j) => {
+      if (withAnswer) return (state.useNo ? `${i+j+1}. ` : '') + q.ans;
+      return qText(q, i + j);
+    }).join('\t'));
+  }
+  return rows.join('\n');
+}
+
+function buildLines(){
+  return state.questions.map((q, i) => qText(q, i)).join('\n');
+}
+
+/* =========================================================
+   导出为图片
+   约定：宽度固定 900px、字号固定 13px，绝不因题量多少而缩放。
+   图片里只放题目本身（无标题、无装饰条、无页脚）。
+   某一列写字放不下时，让那道题独占一整行（列数可变，字号不变）。
+   ========================================================= */
+const IMG = {
+  W: 900,            // 图片宽度，固定
+  FS: 13,            // 主字号，固定（宋体 13 号）
+  FS_NUM: 11,        // 题号字号
+  FS_ANS: 13,        // 答案字号
+  PAD: 40,           // 左右内边距
+  PAD_Y: 40,         // 上下内边距
+  ROW_H: 40,         // 行高
+  GAP: 26,           // 列间距
+  FRAC: 0.9,         // 分数相对主字号的缩放：13 × 0.9 ≈ 12px，和正文一样大才好认
+  FRAC_PAD: 3,       // 分数线左右各超出分子分母多少（教材里线要比数字长）
+  FRAC_GAP: 2.4      // 分数线与分子/分母的垂直间隙
+};
+
+/* 华文宋体：macOS 里字体族名是 STSong / 华文宋体；后面的作跨平台兜底 */
+const IMG_FONT = '"STSong","华文宋体","Songti SC","SimSun",serif';
+
+/* 分数按上下叠写测量，返回宽度。
+   教材上分数线要比分子分母都长一点，所以左右各留 2px 余量。 */
+function measureFrac(ctx, n, d, baseFs){
+  const fs = Math.round(baseFs * IMG.FRAC);
+  ctx.font = `${fs}px ${IMG_FONT}`;
+  return Math.max(ctx.measureText(n).width, ctx.measureText(d).width) + IMG.FRAC_PAD * 2;
+}
+
+/* 括号空：给够写答案的宽度，不随字号一路缩小 */
+function holeW(fs){ return Math.max(Math.round(fs * 2.2), 34); }
+
+/* 解析一段题面文本，切成「普通文字 / 分数 / 括号空」片段，便于按固定字号排版 */
+function parseSegs(text){
+  const segs = [];
+  const re = /(\d+ \d+\/\d+)|(\d+\/\d+)|[(（]\s*[)）]/g;
+  let last = 0, m;
+  while ((m = re.exec(text))){
+    if (m.index > last) segs.push({ t:'s', v: text.slice(last, m.index) });
+    if (m[1] || m[2]){
+      const raw = m[1] || m[2];
+      const mm = raw.match(/^(?:(\d+)\s+)?(\d+)\/(\d+)$/);
+      segs.push({ t:'f', whole: mm[1] ? mm[1] : '', n: mm[2], d: mm[3] });
+    } else {
+      segs.push({ t:'h' });
+    }
+    last = re.lastIndex;
+  }
+  if (last < text.length) segs.push({ t:'s', v: text.slice(last) });
+  return segs;
+}
+
+/* 计算一段题面的绘制宽度（固定字号下） */
+function segsWidth(ctx, segs, fs){
+  let w = 0;
+  segs.forEach(s => {
+    if (s.t === 's'){ ctx.font = `${fs}px ${IMG_FONT}`; w += ctx.measureText(s.v).width; }
+    else if (s.t === 'f'){
+      if (s.whole){ ctx.font = `${fs}px ${IMG_FONT}`; w += ctx.measureText(s.whole).width + 3; }
+      w += measureFrac(ctx, s.n, s.d, fs);
+    } else { w += holeW(fs); }
+  });
+  return w;
+}
+
+/* 绘制一段题面，起点 x，垂直中心 cy，返回结束 x */
+function drawSegs(ctx, segs, x, cy, fs, color){
+  ctx.fillStyle = color;
+  ctx.textBaseline = 'middle';
+  let cur = x;
+  segs.forEach(s => {
+    if (s.t === 's'){
+      ctx.font = `${fs}px ${IMG_FONT}`;
+      ctx.fillText(s.v, cur, cy);
+      cur += ctx.measureText(s.v).width;
+    } else if (s.t === 'f'){
+      if (s.whole){
+        ctx.font = `${fs}px ${IMG_FONT}`;
+        ctx.fillText(s.whole, cur, cy);
+        cur += ctx.measureText(s.whole).width + 3;
+      }
+      const ffs = Math.round(fs * IMG.FRAC);
+      ctx.font = `${ffs}px ${IMG_FONT}`;
+      /* 用实际的墨迹上下界（ascent/descent）定位，而不是靠 middle 基线目测，
+         否则数字墨迹会贴到分数线上。 */
+      const prevBase = ctx.textBaseline;
+      ctx.textBaseline = 'alphabetic';
+      const mn = ctx.measureText(s.n), md = ctx.measureText(s.d);
+      const nw = mn.width, dw = md.width;
+      const colW = Math.max(nw, dw) + IMG.FRAC_PAD * 2;
+      const cx = cur + colW / 2;
+      const barH = Math.max(1.6, fs * 0.1);
+      const barTop = cy - barH / 2;                 // 分数线在 cy 上下居中
+      const gap = IMG.FRAC_GAP;
+      const nAsc = mn.actualBoundingBoxAscent || ffs * 0.72;
+      const nDesc = mn.actualBoundingBoxDescent || 0;
+      const dAsc = md.actualBoundingBoxAscent || ffs * 0.72;
+      // 分子墨迹底边落在 线上方 gap；分母墨迹顶边落在 线下方 gap
+      ctx.fillText(s.n, cx - nw/2, barTop - gap - nDesc);
+      ctx.fillText(s.d, cx - dw/2, barTop + barH + gap + dAsc);
+      // 分数线：横跨整个分数宽度，比数字略长（教材画法）
+      ctx.fillRect(cur, barTop, colW, barH);
+      ctx.textBaseline = prevBase;
+      cur += colW;
+    } else {
+      // 括号空：画出两边括号，中间留白给孩子写
+      ctx.font = `${fs}px ${IMG_FONT}`;
+      const w = holeW(fs);
+      ctx.fillText('(', cur, cy);
+      ctx.fillText(')', cur + w - ctx.measureText(')').width, cy);
+      cur += w;
+    }
+  });
+  return cur;
+}
+
+/* 生成图片：返回 canvas */
+function buildImageCanvas(){
+  const qs = state.questions;
+  if (!qs.length) return null;
+
+  const measure = document.createElement('canvas').getContext('2d');
+
+  // 准备每题的分段与宽度（固定字号）
+  const items = qs.map((q, i) => {
+    const noText = state.useNo ? `${i+1}.` : '';
+    const eq = q.expr.includes('=') ? q.expr : q.expr + ' =';
+    const segs = parseSegs(eq);
+    measure.font = `${IMG.FS_NUM}px ${IMG_FONT}`;
+    const noW = noText ? measure.measureText(noText + ' ').width : 0;
+    const eqW = segsWidth(measure, segs, IMG.FS);
+    let ansW = 0;
+    if (state.showAns){
+      ansW = segsWidth(measure, parseSegs(q.ans), IMG.FS_ANS) + 12;
+    }
+    return { noText, noW, segs, eqW, ans: q.ans, ansW, total: noW + eqW + ansW };
+  });
+
+  /* 排布：按顺序把题流进网格。
+     字号和宽度都是死的，所以「放不下」只能靠换行解决——
+     某道题在当前列宽里确实塞不进去，就让它独占一整行（不缩字号、不截断）。
+     列数在 1 ~ 用户设定 之间各试一遍，取总高度最矮的那个方案；
+     高度相同时取列数多的（版面更舒展）。 */
+  const inner = IMG.W - IMG.PAD * 2;
+  const wantCols = effCols();
+
+  function flowLayout(c){
+    const colW = (inner - IMG.GAP * (c - 1)) / c;
+    const fitW = colW - 16;
+    const rows = [];
+    let cur = [];
+    items.forEach((it, i) => {
+      if (it.total > fitW){          // 长题：独占一行
+        if (cur.length){ rows.push(cur); cur = []; }
+        rows.push([i]);
+        return;
+      }
+      if (cur.length >= c){ rows.push(cur); cur = []; }
+      cur.push(i);
+    });
+    if (cur.length) rows.push(cur);
+    return { rows, colW };
+  }
+
+  let best = null;
+  for (let c = 1; c <= wantCols; c++){
+    const lay = flowLayout(c);
+    const h = lay.rows.length * IMG.ROW_H;
+    if (!best || h <= best.h) best = { cols: c, rows: lay.rows, colW: lay.colW, h };
+  }
+
+  const cols = best.cols;
+  const layoutRows = best.rows;
+  const colW = best.colW;
+
+  // 只留题目本体：无标题、无装饰条、无页脚
+  const bodyH = layoutRows.length * IMG.ROW_H;
+  const H = IMG.PAD_Y * 2 + bodyH;
+
+  const dpr = 2; // 画两倍再缩放，保证清晰
+  const cv = document.createElement('canvas');
+  cv.width = IMG.W * dpr;
+  cv.height = Math.round(H) * dpr;
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // 白底
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, IMG.W, H);
+
+  // 题目
+  const startY = IMG.PAD_Y;
+  layoutRows.forEach((rowIdxs, r) => {
+    rowIdxs.forEach((qi, c) => {
+      const it = items[qi];
+      const x = IMG.PAD + c * (colW + IMG.GAP);
+      const cy = startY + r * IMG.ROW_H + IMG.ROW_H / 2;
+
+      let cur = x;
+      if (it.noText){
+        ctx.font = `${IMG.FS_NUM}px ${IMG_FONT}`;
+        ctx.fillStyle = '#8C93A8';
+        ctx.fillText(it.noText, cur, cy + 1);
+        cur += it.noW;
+      }
+      cur = drawSegs(ctx, it.segs, cur, cy, IMG.FS, '#141A2E');
+
+      if (state.showAns){
+        cur += 12;
+        drawSegs(ctx, parseSegs(it.ans), cur, cy, IMG.FS_ANS, '#3D35F2');
+      }
+    });
+
+    // 行底部虚线（整行宽度，长题行也画满）
+    if (r < layoutRows.length - 1){
+      ctx.fillStyle = '#EFF1F8';
+      ctx.fillRect(IMG.PAD, startY + (r + 1) * IMG.ROW_H - 0.5, inner, 1);
+    }
+  });
+
+  return cv;
+}
+
+/* 保存为图片 */
+async function saveImage(){
+  if (!state.questions.length){ toast('先生成题目再保存'); return; }
+  const btn = $('#saveImg');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '正在导出…';
+  try{
+    const cv = buildImageCanvas();
+    if (!cv){ toast('没有可导出的题目'); return; }
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    if (!blob){ toast('图片生成失败'); return; }
+    const d = new Date();
+    const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+    const name = `口算题-${GRADE_NAMES[state.grade-1]}年级-${state.questions.length}题-${stamp}.png`;
+
+    // 优先走系统保存对话框，用户可以自己选位置
+    if (window.showSaveFilePicker){
+      try{
+        const handle = await window.showSaveFilePicker({
+          suggestedName: name,
+          types: [{ description: 'PNG 图片', accept: { 'image/png': ['.png'] } }]
+        });
+        const ws = await handle.createWritable();
+        await ws.write(blob);
+        await ws.close();
+        toast(`已保存：${name}`);
+        return;
+      }catch(err){
+        if (err && err.name === 'AbortError'){ toast('已取消'); return; }
+        /* 其他错误则退回下载方式 */
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(`已保存：${name}`);
+  }catch(e){
+    toast('导出失败：' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+}
+
+/* =========================================================
+   事件绑定 & 初始化
+   ========================================================= */
+function init(){
+  const restored = load();
+
+  $('#swAns').checked = state.showAns;
+  $('#swNo').checked = state.useNo;
+
+  renderBooks();
+  renderGrades();
+  renderCounts();
+  renderCols();
+
+  if (!restored || state.selected.size === 0) autoSelect();
+  /* 过滤掉不属于当前年级的残留题型 */
+  const names = new Set(gradeTypes().map(t => t.n));
+  Array.from(state.selected).forEach(n => { if (!names.has(n)) state.selected.delete(n); });
+  if (state.selected.size === 0) autoSelect();
+
+  renderTypes();
+  renderSheet();
+  updateCntLabel();
+
+  $('#selAll').onclick = () => {
+    gradeTypes().forEach(t => state.selected.add(t.n));
+    renderTypes(); save();
+  };
+  $('#selNone').onclick = () => {
+    state.selected.clear();
+    renderTypes(); save();
+  };
+
+  $('#customCount').addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    if (v >= 1 && v <= 200){
+      state.count = v;
+      $$('#counts .chip').forEach(c => c.classList.remove('on'));
+      save();
+    }
+  });
+
+  $('#swAns').onchange = e => {
+    state.showAns = e.target.checked;
+    save();
+    if (state.questions.length) renderSheet();
+  };
+  $('#swNo').onchange = e => {
+    state.useNo = e.target.checked;
+    save();
+    if (state.questions.length) renderSheet();
+  };
+
+  $('#gen').onclick = () => {
+    if (!state.selected.size){ toast('请先勾选至少一个题型'); return; }
+    const n = Math.max(1, Math.min(200, state.count || 20));
+    const res = buildQuestions(n);
+    state.questions = res.list;
+    state.deduped = res.deduped;
+    renderSheet();
+    save();
+    if (window.innerWidth <= 1080){
+      document.querySelector('.output').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    const real = res.deduped;
+    if (real < res.list.length){
+      toast(`已生成 ${res.list.length} 道（该题型去重后只有 ${real} 种式子，其余重复补齐）`);
+    } else {
+      toast(`已生成 ${res.list.length} 道题`);
+    }
+  };
+
+  $('#copyTable').onclick = () => copyText(buildTSV(false), '表格已复制，可直接粘贴到 Excel');
+  $('#copyLine').onclick  = () => copyText(buildLines(), '已复制成行，可粘贴到 Word');
+  $('#copyAns').onclick   = () => copyText(buildTSV(true), '答案已复制');
+  $('#saveImg').onclick   = () => saveImage();
+  $('#printBtn').onclick  = () => {
+    if (!state.questions.length){ toast('先生成题目再打印'); return; }
+    window.print();
+  };
+
+  /* 键盘：回车触发生成 */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.target.tagName === 'INPUT')) $('#gen').click();
+  });
+
+  /* 窗口尺寸变化：列数可能需要收敛/恢复，重绘一次（防抖） */
+  let rzTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(rzTimer);
+    rzTimer = setTimeout(() => {
+      if (state.questions.length) renderSheet();
+    }, 180);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
